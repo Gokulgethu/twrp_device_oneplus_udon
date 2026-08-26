@@ -70,16 +70,41 @@ jobs:
           cp -r $GITHUB_WORKSPACE/device/oneplus/udon /home/runner/fox/device/oneplus/
 
       - name: Build OrangeFox Recovery
+        shell: bash
         run: |
           cd /home/runner/fox
+          set +e
           export ALLOW_MISSING_DEPENDENCIES=true
           export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
           export FOX_VIRTUAL_AB_DEVICE=1
           export TARGET_DEVICE=udon
           export LC_ALL="C"
+          
+          echo "=== Sourcing envsetup.sh ==="
           source build/envsetup.sh
-          lunch fox_udon-eng || lunch omni_udon-eng || lunch twrp_udon-eng
-          mka ${{ inputs.BUILD_TARGET || 'recoveryimage' }} -j$(nproc --all) || mka recoveryimage -j$(nproc --all) || mka bootimage -j$(nproc --all)
+          
+          echo "=== Running lunch ==="
+          lunch fox_udon-eng
+          LUNCH_STATUS=$?
+          if [ $LUNCH_STATUS -ne 0 ]; then
+            echo "fox_udon-eng failed, trying fox_udon-userdebug..."
+            lunch fox_udon-userdebug
+            LUNCH_STATUS=$?
+          fi
+          if [ $LUNCH_STATUS -ne 0 ]; then
+            echo "fox_udon-userdebug failed, trying omni_udon-eng..."
+            lunch omni_udon-eng
+            LUNCH_STATUS=$?
+          fi
+          if [ $LUNCH_STATUS -ne 0 ]; then
+            echo "omni_udon-eng failed, trying twrp_udon-eng..."
+            lunch twrp_udon-eng
+            LUNCH_STATUS=$?
+          fi
+
+          echo "=== Starting Compilation ==="
+          set -e
+          mka ${{ inputs.BUILD_TARGET || 'recoveryimage' }} -j$(nproc --all)
 
       - name: Upload Recovery Artifacts
         uses: actions/upload-artifact@v4
