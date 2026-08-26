@@ -19,9 +19,9 @@ PRODUCT_MODEL := CPH2487
 PRODUCT_MANUFACTURER := OnePlus
 
 # OrangeFox Recovery Flags
-FOX_VERSION := "R12.1"
 FOX_BUILD_TYPE := "Unofficial"
 FOX_MAINTAINER := "The LineageOS Project"
+FOX_MAINTAINER_PATCH_VERSION := 1
 FOX_VIRTUAL_AB_DEVICE := 1
 FOX_RECOVERY_SYSTEM_PARTITION := "/dev/block/mapper/system"
 FOX_RECOVERY_VENDOR_PARTITION := "/dev/block/mapper/vendor"

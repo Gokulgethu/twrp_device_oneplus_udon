@@ -26,6 +26,12 @@ TARGET_BOARD_PLATFORM := waipio
 TARGET_BOOTLOADER_BOARD_NAME := udon
 TARGET_NO_BOOTLOADER := true
 
+# A/B & Virtual A/B
+AB_OTA_UPDATER := true
+ENABLE_VIRTUAL_AB := true
+BOARD_USES_VIRTUAL_AB_RECOVERY := true
+BOARD_USES_DYNAMIC_PARTITIONS := true
+
 # Kernel & Boot Image Header
 BOARD_BOOT_HEADER_VERSION := 4
 BOARD_KERNEL_BASE := 0x00000000
@@ -60,11 +66,6 @@ BOARD_OPLUS_DYNAMIC_PARTITIONS_PARTITION_LIST := \
     my_bigball \
     my_heytap \
     my_manifest
-
-# Dynamic & Virtual A/B Partitions
-BOARD_USES_DYNAMIC_PARTITIONS := true
-ENABLE_VIRTUAL_AB := true
-BOARD_USES_VIRTUAL_AB_RECOVERY := true
 
 # Recovery Fstab
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery/root/system/etc/recovery.fstab
