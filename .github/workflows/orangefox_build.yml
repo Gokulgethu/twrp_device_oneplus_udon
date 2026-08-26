@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       FOX_BRANCH:
-        description: 'OrangeFox Manifest Branch'
+        description: 'OrangeFox Branch (12.1 or 14.1)'
         required: true
-        default: 'fox_12.1'
+        default: '12.1'
         type: choice
         options:
-          - 'fox_12.1'
-          - 'fox_11.0'
-      BUILD_TYPE:
+          - '12.1'
+          - '14.1'
+      BUILD_TARGET:
         description: 'Build Target'
         required: true
         default: 'recoveryimage'
@@ -22,7 +22,7 @@ on:
 
 jobs:
   build:
-    name: Build OrangeFox (${{ inputs.FOX_BRANCH }})
+    name: Build OrangeFox (${{ inputs.FOX_BRANCH || '12.1' }})
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Device Tree
@@ -55,24 +55,23 @@ jobs:
           sudo curl --create-dirs -L -o /usr/local/bin/repo -O -L https://storage.googleapis.com/git-repo-downloads/repo
           sudo chmod a+rx /usr/local/bin/repo
 
-      - name: Initialize & Sync OrangeFox Manifest
+      - name: Sync OrangeFox Sources with Official Sync Tool
         run: |
-          mkdir -p ~/fox
-          cd ~/fox
           git config --global user.name "The LineageOS Project"
           git config --global user.email "dev@lineageos.org"
-          repo init -u https://gitlab.com/OrangeFox/Manifest.git -b ${{ inputs.FOX_BRANCH || 'fox_12.1' }} --depth=1
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          git clone https://gitlab.com/OrangeFox/sync.git ~/OrangeFox_sync
+          cd ~/OrangeFox_sync
+          ./orangefox_sync.sh --branch ${{ inputs.FOX_BRANCH || '12.1' }} --path /home/runner/fox
 
       - name: Integrate OnePlus 11R Device Tree
         run: |
-          rm -rf ~/fox/device/oneplus/udon
-          mkdir -p ~/fox/device/oneplus
-          cp -r $GITHUB_WORKSPACE/device/oneplus/udon ~/fox/device/oneplus/
+          rm -rf /home/runner/fox/device/oneplus/udon
+          mkdir -p /home/runner/fox/device/oneplus
+          cp -r $GITHUB_WORKSPACE/device/oneplus/udon /home/runner/fox/device/oneplus/
 
       - name: Build OrangeFox Recovery
         run: |
-          cd ~/fox
+          cd /home/runner/fox
           export ALLOW_MISSING_DEPENDENCIES=true
           export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
           export FOX_VIRTUAL_AB_DEVICE=1
@@ -80,15 +79,15 @@ jobs:
           export LC_ALL="C"
           source build/envsetup.sh
           lunch fox_udon-eng || lunch omni_udon-eng || lunch twrp_udon-eng
-          mka ${{ inputs.BUILD_TYPE || 'recoveryimage' }} -j$(nproc --all) || mka recoveryimage -j$(nproc --all) || mka bootimage -j$(nproc --all)
+          mka ${{ inputs.BUILD_TARGET || 'recoveryimage' }} -j$(nproc --all) || mka recoveryimage -j$(nproc --all) || mka bootimage -j$(nproc --all)
 
       - name: Upload Recovery Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: OrangeFox-OnePlus11R-${{ github.sha }}
           path: |
-            ~/fox/out/target/product/udon/OrangeFox*.zip
-            ~/fox/out/target/product/udon/recovery.img
-            ~/fox/out/target/product/udon/boot.img
-            ~/fox/out/target/product/udon/vendor_boot.img
+            /home/runner/fox/out/target/product/udon/OrangeFox*.zip
+            /home/runner/fox/out/target/product/udon/recovery.img
+            /home/runner/fox/out/target/product/udon/boot.img
+            /home/runner/fox/out/target/product/udon/vendor_boot.img
           if-no-files-found: warn
