@@ -1,0 +1,14 @@
+on early-init
+    mkdir /mnt/vendor 0775 shell system
+    mkdir /mnt/vendor/persist 0771 system system
+
+on init
+    start boot-hal-1-2
+    setprop sys.usb.configfs 1
+
+on fs
+    wait /dev/block/platform/soc/${ro.boot.bootdevice}
+    symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
+
+on boot
+    setprop sys.usb.config mtp,adb

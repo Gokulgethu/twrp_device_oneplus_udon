@@ -1,0 +1,5 @@
+# Firmware loading
+/dev/qseecom              0660   system     drmrpc
+/dev/smcinvoke            0660   system     drmrpc
+/dev/ion                  0664   system     system
+/dev/rtc0                 0660   system     system
